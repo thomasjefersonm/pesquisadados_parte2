@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+      <link rel="shortcut icon" href="../img/favicon.ico" />
+    <title>Pipeline (SQL Server → MinIO → Delta) - Parte 2 - Apache Spark, MinIO e Delta Lake</title>
+    <link rel="stylesheet" href="../css/theme.css" />
+    <link rel="stylesheet" href="../css/theme_extra.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" />
+    
+      <script>
+        // Current page data
+        var mkdocs_page_name = "Pipeline (SQL Server \u2192 MinIO \u2192 Delta)";
+        var mkdocs_page_input_path = "pipeline.md";
+        var mkdocs_page_url = null;
+      </script>
+    
+    <!--[if lt IE 9]>
+      <script src="../js/html5shiv.min.js"></script>
+    <![endif]-->
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+      <script>hljs.highlightAll();</script> 
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
+      <div class="wy-side-nav-search">
+          <a href=".." class="icon icon-home"> Parte 2 - Apache Spark, MinIO e Delta Lake
+        </a><div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../search.html" method="get">
+      <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="..">Contextualização</a>
+                </li>
+              </ul>
+              <ul class="current">
+                <li class="toctree-l1 current"><a class="reference internal current" href="#">Pipeline (SQL Server → MinIO → Delta)</a>
+    <ul class="current">
+    <li class="toctree-l2"><a class="reference internal" href="#o-que-e-o-minio">O que é o MinIO</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#passo-1-setup-do-sql-server-00_setup_sqlserver">Passo 1 — Setup do SQL Server (00_setup_sqlserver)</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#passo-2-extracao-para-a-landing-zone-01_sqlserver_to_minio_csv">Passo 2 — Extração para a landing-zone (01_sqlserver_to_minio_csv)</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#passo-3-conversao-para-delta-lake-02_csv_to_delta">Passo 3 — Conversão para Delta Lake (02_csv_to_delta)</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#configuracao-do-spark-para-minio-e-delta">Configuração do Spark para MinIO e Delta</a>
+    </li>
+    </ul>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../delta-dml/">DML no Delta Lake</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../gerenciadas/">Tabelas gerenciadas x não gerenciadas</a>
+                </li>
+              </ul>
+      </div>
+    </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+      <nav class="wy-nav-top" role="navigation" aria-label="Mobile navigation menu">
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="..">Parte 2 - Apache Spark, MinIO e Delta Lake</a>
+        
+      </nav>
+      <div class="wy-nav-content">
+        <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href=".." class="icon icon-home" aria-label="Docs"></a></li>
+      <li class="breadcrumb-item active">Pipeline (SQL Server → MinIO → Delta)</li>
+    <li class="wy-breadcrumbs-aside">
+          <a href="https://github.com/thomasjefersonm/pesquisadados_parte2/edit/main/docs/pipeline.md" class="icon icon-github"> Edit on GitHub</a>
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+            <div class="section" itemprop="articleBody">
+              
+                <h1 id="pipeline-sql-server-minio-delta-lake">Pipeline: SQL Server → MinIO → Delta Lake</h1>
+<p>O pipeline segue a <strong>arquitetura medalhão</strong>, que organiza os dados em camadas. Aqui usamos as duas primeiras:</p>
+<table>
+<thead>
+<tr>
+<th>Camada</th>
+<th>Bucket no MinIO</th>
+<th>Formato</th>
+<th>Conteúdo</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Landing zone</td>
+<td><code>landing-zone</code></td>
+<td>CSV</td>
+<td>Cópia bruta das tabelas, 1 arquivo por tabela</td>
+</tr>
+<tr>
+<td>Bronze</td>
+<td><code>bronze</code></td>
+<td>Delta Lake</td>
+<td>Mesmos dados, em tabelas com transações e histórico</td>
+</tr>
+</tbody>
+</table>
+<h2 id="o-que-e-o-minio">O que é o MinIO</h2>
+<p>É um <em>object storage</em> de código aberto e compatível com a API do Amazon S3. Os dados ficam em <strong>buckets</strong> (como pastas de nível superior) e o Spark os acessa pelo conector <strong>S3A</strong>, com endereços do tipo <code>s3a://bronze/pedidos</code>.</p>
+<h2 id="passo-1-setup-do-sql-server-00_setup_sqlserver">Passo 1 — Setup do SQL Server (<code>00_setup_sqlserver</code>)</h2>
+<p>Cria o database <code>LojaDB</code>, as tabelas <code>clientes</code> e <code>pedidos</code> (DDL da página de contextualização) e carrega os CSVs de <code>data/</code>. A carga respeita a chave estrangeira: <code>clientes</code> antes de <code>pedidos</code>.</p>
+<h2 id="passo-2-extracao-para-a-landing-zone-01_sqlserver_to_minio_csv">Passo 2 — Extração para a landing-zone (<code>01_sqlserver_to_minio_csv</code>)</h2>
+<p>Lista <strong>todas</strong> as tabelas do banco e grava cada uma como CSV no bucket <code>landing-zone</code>:</p>
+<pre><code class="language-python">cursor.execute(&quot;&quot;&quot;
+    SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES
+    WHERE TABLE_TYPE = 'BASE TABLE' AND TABLE_SCHEMA = 'dbo'
+&quot;&quot;&quot;)
+tabelas = [row[0] for row in cursor.fetchall()]
+
+for tabela in tabelas:
+    cursor.execute(f'SELECT * FROM [{tabela}]')
+    ...
+    s3_client.put_object(Bucket=LANDING_BUCKET, Key=f'{tabela}.csv', Body=csv_bytes)
+</code></pre>
+<p>Como a lista de tabelas vem do próprio banco, o notebook continua funcionando se novas tabelas forem criadas.</p>
+<h2 id="passo-3-conversao-para-delta-lake-02_csv_to_delta">Passo 3 — Conversão para Delta Lake (<code>02_csv_to_delta</code>)</h2>
+<p>O Spark lê cada CSV da <code>landing-zone</code> e grava no bucket <code>bronze</code> em formato Delta. O schema é definido explicitamente, para que <code>data_pedido</code> seja <code>DATE</code> e <code>valor_unitario</code> seja <code>DECIMAL(10,2)</code>, igual ao DDL de origem:</p>
+<pre><code class="language-python">df = spark.read.option('header', 'true').schema(schemas[tabela]).csv(f's3a://{LANDING_BUCKET}/{tabela}.csv')
+df.write.format('delta').mode('overwrite').save(f's3a://{BRONZE_BUCKET}/{tabela}')
+</code></pre>
+<p>Cada tabela Delta é uma pasta com arquivos Parquet (os dados) e a pasta <code>_delta_log</code> (o log de transações que dá suporte a ACID e ao histórico).</p>
+<h2 id="configuracao-do-spark-para-minio-e-delta">Configuração do Spark para MinIO e Delta</h2>
+<pre><code class="language-python">spark = (
+    SparkSession.builder
+    .master('local[*]')
+    .config('spark.jars.packages', 'io.delta:delta-spark_2.12:3.2.1,org.apache.hadoop:hadoop-aws:3.3.4')
+    .config('spark.sql.extensions', 'io.delta.sql.DeltaSparkSessionExtension')
+    .config('spark.sql.catalog.spark_catalog', 'org.apache.spark.sql.delta.catalog.DeltaCatalog')
+    .config('spark.hadoop.fs.s3a.endpoint', 'http://localhost:9020')
+    .config('spark.hadoop.fs.s3a.path.style.access', 'true')
+    ...
+    .getOrCreate()
+)
+</code></pre>
+<p>O <code>path.style.access</code> é necessário porque o MinIO local usa endereços no formato <code>host:porta/bucket</code>.</p>
+              
+            </div>
+          </div><footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="Footer Navigation">
+        <a href=".." class="btn btn-neutral float-left" title="Contextualização"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+        <a href="../delta-dml/" class="btn btn-neutral float-right" title="DML no Delta Lake">Next <span class="icon icon-circle-arrow-right"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+  </div>
+
+  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+          
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" aria-label="Versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    
+        <span>
+          <a href="https://github.com/thomasjefersonm/pesquisadados_parte2" class="fa fa-github" style="color: #fcfcfc"> GitHub</a>
+        </span>
+    
+    
+      <span><a href=".." style="color: #fcfcfc">&laquo; Previous</a></span>
+    
+    
+      <span><a href="../delta-dml/" style="color: #fcfcfc">Next &raquo;</a></span>
+    
+  </span>
+</div>
+    <script src="../js/jquery-3.6.0.min.js"></script>
+    <script>var base_url = "..";</script>
+    <script src="../js/theme_extra.js"></script>
+    <script src="../js/theme.js"></script>
+      <script src="../search/main.js"></script>
+    <script>
+        jQuery(function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        });
+    </script>
+
+</body>
+</html>
