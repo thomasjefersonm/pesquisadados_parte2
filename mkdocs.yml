@@ -1,0 +1,9 @@
+site_name: Parte 2 - Apache Spark, MinIO e Delta Lake
+repo_url: https://github.com/thomasjefersonm/pesquisadados_parte2
+edit_uri: edit/main/docs/
+nav:
+  - Contextualização: index.md
+  - Pipeline (SQL Server → MinIO → Delta): pipeline.md
+  - DML no Delta Lake: delta-dml.md
+  - Tabelas gerenciadas x não gerenciadas: gerenciadas.md
+theme: readthedocs

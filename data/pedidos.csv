@@ -1,0 +1,6 @@
+id_pedido,id_cliente,produto,quantidade,valor_unitario,data_pedido,status
+101,1,Notebook,1,4500.00,2026-09-01,PAGO
+102,2,Mouse,2,80.00,2026-09-02,PAGO
+103,3,Monitor,1,1200.00,2026-09-03,PENDENTE
+104,1,Teclado,1,250.00,2026-09-05,PENDENTE
+105,4,Headset,1,300.00,2026-09-06,CANCELADO
