@@ -46,19 +46,5 @@ CREATE TABLE pedidos (
 SQL Server (LojaDB)  ──▶  MinIO: landing-zone/ (CSV)  ──▶  MinIO: bronze/ (Delta Lake)
 ```
 
-## Ferramentas utilizadas
-| Ferramenta | Uso |
-|---|---|
-| SQL Server 2025 (Developer) | Banco relacional de origem |
-| MinIO | Object storage compatível com S3 |
-| Docker Compose | Sobe o SQL Server e o MinIO |
-| PySpark 3.5.3 | Processamento |
-| delta-spark 3.2.1 | Delta Lake |
-| pyodbc + ODBC Driver 18 | Conexão Python → SQL Server |
-| boto3 | Acesso ao MinIO (buckets e objetos) |
-| UV | Gerenciador de pacotes e ambiente virtual |
-| JupyterLab | Notebooks |
-| MkDocs | Esta documentação |
-
 ## Notebooks
 Executados em ordem, na pasta `notebook/`: `00_setup_sqlserver`, `01_sqlserver_to_minio_csv`, `02_csv_to_delta`, `03_dml_delta` e `04_gerenciadas_vs_nao_gerenciadas`.

@@ -29,6 +29,27 @@ Projeto acadêmico, executado em modo local (`local[*]`) com containers Docker. 
    (Setup)                 (Extração)             (Delta, DML, tabelas)
 ```
 
+## Ferramentas utilizadas
+
+| Ferramenta | Versão | Para que serve |
+|---|---|---|
+| SQL Server (Developer) | 2025 | Banco relacional de origem dos dados |
+| MinIO | RELEASE.2025-02-03T21-03-04Z | Object storage compatível com S3 (buckets `landing-zone` e `bronze`) |
+| Docker e Docker Compose | v2+ | Executam o SQL Server e o MinIO em containers |
+| Apache Spark (PySpark) | 3.5.3 | Processamento dos dados |
+| Delta Lake (delta-spark) | 3.2.1 | Formato de tabela com transações, histórico e time travel |
+| hadoop-aws (conector S3A) | 3.3.4 | Permite ao Spark ler e gravar no MinIO |
+| ODBC Driver for SQL Server | 18 | Driver de conexão com o SQL Server |
+| pyodbc | 5.3.0 | Conexão Python → SQL Server |
+| boto3, pandas, python-dotenv | ver `uv.lock` | Acesso ao MinIO, manipulação de dados e leitura do `.env` |
+| UV | – | Gerenciador de pacotes e ambiente virtual |
+| JupyterLab | 4.x | Execução dos notebooks |
+| MkDocs (tema readthedocs) | 1.6 | Documentação publicada no GitHub Pages |
+| Taskipy | – | Atalhos de comandos (`up`, `lab`, `docs`, `deploy`) |
+| Java (OpenJDK) | 17 | Necessário para executar o Spark |
+| Python | 3.11 | Linguagem dos notebooks |
+| Git e GitHub | – | Versionamento e repositório |
+
 ## Pré-requisitos
 
 | Item | Versão |
