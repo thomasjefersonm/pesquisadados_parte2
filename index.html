@@ -54,8 +54,6 @@
     </li>
     <li class="toctree-l2"><a class="reference internal" href="#arquitetura">Arquitetura</a>
     </li>
-    <li class="toctree-l2"><a class="reference internal" href="#ferramentas-utilizadas">Ferramentas utilizadas</a>
-    </li>
     <li class="toctree-l2"><a class="reference internal" href="#notebooks">Notebooks</a>
     </li>
     </ul>
@@ -148,57 +146,6 @@ CREATE TABLE pedidos (
 <h2 id="arquitetura">Arquitetura</h2>
 <pre><code>SQL Server (LojaDB)  ──▶  MinIO: landing-zone/ (CSV)  ──▶  MinIO: bronze/ (Delta Lake)
 </code></pre>
-<h2 id="ferramentas-utilizadas">Ferramentas utilizadas</h2>
-<table>
-<thead>
-<tr>
-<th>Ferramenta</th>
-<th>Uso</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>SQL Server 2025 (Developer)</td>
-<td>Banco relacional de origem</td>
-</tr>
-<tr>
-<td>MinIO</td>
-<td>Object storage compatível com S3</td>
-</tr>
-<tr>
-<td>Docker Compose</td>
-<td>Sobe o SQL Server e o MinIO</td>
-</tr>
-<tr>
-<td>PySpark 3.5.3</td>
-<td>Processamento</td>
-</tr>
-<tr>
-<td>delta-spark 3.2.1</td>
-<td>Delta Lake</td>
-</tr>
-<tr>
-<td>pyodbc + ODBC Driver 18</td>
-<td>Conexão Python → SQL Server</td>
-</tr>
-<tr>
-<td>boto3</td>
-<td>Acesso ao MinIO (buckets e objetos)</td>
-</tr>
-<tr>
-<td>UV</td>
-<td>Gerenciador de pacotes e ambiente virtual</td>
-</tr>
-<tr>
-<td>JupyterLab</td>
-<td>Notebooks</td>
-</tr>
-<tr>
-<td>MkDocs</td>
-<td>Esta documentação</td>
-</tr>
-</tbody>
-</table>
 <h2 id="notebooks">Notebooks</h2>
 <p>Executados em ordem, na pasta <code>notebook/</code>: <code>00_setup_sqlserver</code>, <code>01_sqlserver_to_minio_csv</code>, <code>02_csv_to_delta</code>, <code>03_dml_delta</code> e <code>04_gerenciadas_vs_nao_gerenciadas</code>.</p>
               
@@ -253,5 +200,5 @@ CREATE TABLE pedidos (
 
 <!--
 MkDocs version : 1.6.1
-Build Date UTC : 2026-10-12 22:34:20.995993+00:00
+Build Date UTC : 2026-10-12 22:47:36.910097+00:00
 -->
