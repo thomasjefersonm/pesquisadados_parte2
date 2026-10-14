@@ -163,4 +163,4 @@ pesquisadados_parte2/
 - https://min.io/docs/minio/linux/index.html
 - https://learn.microsoft.com/sql/linux/quickstart-install-connect-docker
 - https://docs.astral.sh/uv/
-- https://www.mkdocs.org/
+- https://www.mkdocs.org.
